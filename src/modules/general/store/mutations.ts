@@ -1,13 +1,28 @@
 import { MutationTree } from 'vuex';
-import { ModulenameStateInterface } from './interfaces';
+import { GeneralStateInterface } from './interfaces';
 
-export enum ModulenameMutations {
-    SET_SOMETHING = 'SET_SOMETHING',
+export enum GeneralMutations {
+    SET_LEXEMES = 'SET_LEXEMES',
+    SET_CURRENT_VALUE = 'SET_CURRENT_VALUE',
+    SET_SPLIT_LINES = 'SET_SPLIT_LINES',
+    SET_SPLIT_BLOCKS = 'SET_SPLIT_BLOCKS'
 }
 
-const mutation: MutationTree<ModulenameStateInterface> = {
-    [ModulenameMutations.SET_SOMETHING](state, payload) {
-        state.something = payload;
+const mutation: MutationTree<GeneralStateInterface> = {
+    [GeneralMutations.SET_LEXEMES](state, payload) {
+        state.lexemes = payload;
+    },
+
+    [GeneralMutations.SET_CURRENT_VALUE](state, payload) {
+        state.currentValue = payload;
+    },
+
+    [GeneralMutations.SET_SPLIT_LINES](state, payload) {
+        state.splitLines = payload;
+    },
+
+    [GeneralMutations.SET_SPLIT_BLOCKS](state, payload) {
+        state.splitBlocks = payload;
     }
 };
 

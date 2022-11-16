@@ -1,8 +1,11 @@
-import { ModulenameStateInterface } from './interfaces';
+import { GeneralStateInterface } from './interfaces';
 
-const state = (): ModulenameStateInterface => {
+const state = (): GeneralStateInterface => {
     return {
-        something: true,
+        lexemes: [],
+        currentValue: '',
+        splitLines: [],
+        splitBlocks: []
     };
 };
 

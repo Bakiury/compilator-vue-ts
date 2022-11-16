@@ -4,10 +4,10 @@ import actions from './actions';
 import getters from './getters';
 import mutations from './mutations';
 
-import { ModulenameStateInterface } from './interfaces';
+import { GeneralStateInterface } from './interfaces';
 import { RootState } from '@/store/types';
 
-const Modulename: Module<ModulenameStateInterface, RootState> = {
+const General: Module<GeneralStateInterface, RootState> = {
     namespaced: true,
     actions,
     getters,
@@ -15,4 +15,4 @@ const Modulename: Module<ModulenameStateInterface, RootState> = {
     state
 };
 
-export default Modulename;
+export default General;
