@@ -9,5 +9,5 @@ export interface Lexeme {
     nombre: string;
     tipo: string;
     codigo: string;
-    semantico: number;
+    semantico: string;
 }

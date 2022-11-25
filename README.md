@@ -1,4 +1,4 @@
-# compilator-vue
+# compilator-vue-ts
 
 ## Project setup
 ```

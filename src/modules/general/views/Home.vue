@@ -47,10 +47,11 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed, watch } from 'vue';
 import { useStore } from 'vuex';
-import { GeneralMutations } from '@/modules/general/store/mutations';
-import Lexical from '@/modules/general/components/Lexical.vue';
-import Syntactic from '@/modules/general/components/Syntactic.vue';
-import Semantic from '@/modules/general/components/Semantic.vue';
+import { GeneralMutations } from '../store/mutations';
+import { Lexeme } from '../store/interfaces';
+import Lexical from '../components/Lexical.vue';
+import Syntactic from '../components/Syntactic.vue';
+import Semantic from '../components/Semantic.vue';
 
 export default defineComponent({
     components: {
@@ -93,28 +94,28 @@ export default defineComponent({
         };
 
         // Compare words not found
-        const checkWordNotFound = (data: any) => {
+        const checkWordNotFound = (name: string) => {
             let temp;
             // Check if the word is a number
-            if (data.match(/[1-9]+/g)) {
+            if (name.match(/[1-9]+/g)) {
                 temp = {
-                    nombre: data,
+                    nombre: name,
                     tipo: "numero",
                     codigo: "102",
                     semantico: "Valor"
                 };
                 // Check if the word isn't an empty string and a number
-            } else if (data !== '' && isNaN(data)) {
+            } else if (name !== '' && isNaN(parseInt(name))) {
                 temp = {
-                    nombre: data,
+                    nombre: name,
                     tipo: "identificador",
                     codigo: "101",
                     semantico: "Declaración de variable"
                 };
                 // Check if the word isn't an empty string and if the word is a number
-            } else if (data !== '' && !isNaN(data)) {
+            } else if (name !== '' && !isNaN(parseInt(name))) {
                 temp = {
-                    nombre: data,
+                    nombre: name,
                     tipo: "numero",
                     codigo: "102",
                     semantico: ""
@@ -124,21 +125,21 @@ export default defineComponent({
         };
 
         // Search word in lexemes
-        const search = (data: Array<string>) => {
-            let subTokens: any = [];
+        const search = (words: Array<string>) => {
+            let subTokens: Array<Lexeme | undefined> = [];
 
-            data?.forEach((el: any) => {
-                // Check if the word is iside of lexemes
-                lexemes.value.some((item: any) => item.nombre == el)
-                    ? lexemes.value.filter((item: any) => {
-                        if (item.nombre == el) {
+            words.forEach((tk: string) => {
+                // Check if the word is inside of lexemes
+                lexemes.value.some((item: Lexeme) => item.nombre == tk)
+                    ? lexemes.value.filter((item: Lexeme) => {
+                        if (item.nombre == tk) {
                             subTokens.push(item);
                         }
                     })
 
                     // Check if the word isn't an empty string
-                    : checkWordNotFound(el) !== undefined
-                        ? subTokens.push(checkWordNotFound(el))
+                    : checkWordNotFound(tk) !== undefined
+                        ? subTokens.push(checkWordNotFound(tk))
                         : '';
             });
             tokens.value.push(subTokens);
@@ -155,12 +156,12 @@ export default defineComponent({
         // Divide the text in words and then search in the lexemas db
         const splitWords = () => {
             // Loop each line
-            mySplitLines.value.forEach((el: any) => {
+            mySplitLines.value.forEach((line: string) => {
                 // In each line we separate the symmbols
-                el = el.replace(/(;|=|\+|\.|\(|\)|\/|\*|{|}|'|")/g, ' $& ');
+                line = line.replace(/(;|=|\+|\.|\(|\)|\/|\*|{|}|'|")/g, ' $& ');
 
                 // Separate each line by its spaces
-                const res = el.split(/\s/g);
+                const res = line.split(/\s/g);
 
                 // Search for each word
                 search(res);
@@ -182,45 +183,55 @@ export default defineComponent({
             let myVars: Array<string> = [];
             let myValueVars: Array<string | number> = [];
             let objVars: any = {};
-            let c: any = 0;
+            let c = 0;
 
-            mySplitBlocks.value.forEach((item: any) => {
+            mySplitBlocks.value.forEach((line: string) => {
                 // Validate variables
-                item = item.trim();
-                goSemanticVar.value = true;
-                goSemanticIf.value = true;
-                if (item.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 1
+                line = line.trim();
+                if (line.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 1
                     answersByCode.value.push('Compila correctamente la declaración de variable tipo string');
 
-                    let newItem = item.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g).toString().split('=');
-                    myVars.push(newItem[0].replace(/(var|let|const)/g, '').trim());
-                    myValueVars.push(newItem[1].replace(/(var|let|const)/g, '').replace(/"/g, '').trim());
-                } else if (item.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 1
+                    let newLine = line.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g)?.toString().split('=');
+
+                    if (newLine) {
+                        myVars.push(newLine[0].replace(/(var|let|const)/g, '').trim());
+                        myValueVars.push(newLine[1].replace(/(var|let|const)/g, '').replace(/"/g, '').trim());
+                    }
+                } else if (line.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 1
                     answersByCode.value.push('Compila correctamente la declaración de variable tipo integer');
 
-                    let newItem = item.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g).toString().split('=');
-                    myVars.push(newItem[0].replace(/(var|let|const)/g, '').trim());
-                    myValueVars.push(parseInt(newItem[1].replace(/(var|let|const)/g, '').trim()));
-                } else if (item.match(/^[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 2
+                    let newLine = line.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g)?.toString().split('=');
+
+                    if (newLine) {
+                        myVars.push(newLine[0].replace(/(var|let|const)/g, '').trim());
+                        myValueVars.push(parseInt(newLine[1].replace(/(var|let|const)/g, '').trim()));
+                    }
+                } else if (line.match(/^[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 2
                     answersByCode.value.push('Se inicializó correctamente la variable tipo string');
 
-                    let newItem = item.match(/[A-Za-z]+\s*=\s*".+"/g).toString().split('=');
-                    myVars.push(newItem[0].trim());
-                    myValueVars.push(newItem[1].replace(/"/g, '').trim());
-                } else if (item.match(/^[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 2
+                    let newLine = line.match(/[A-Za-z]+\s*=\s*".+"/g)?.toString().split('=');
+
+                    if (newLine) {
+                        myVars.push(newLine[0].trim());
+                        myValueVars.push(newLine[1].replace(/"/g, '').trim());
+                    }
+                } else if (line.match(/^[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 2
                     answersByCode.value.push('Se inicializó correctamente la variable tipo integer');
 
-                    let newItem = item.match(/[A-Za-z]+\s*=\s*\d+/g).toString().split('=');
-                    myVars.push(newItem[0].trim());
-                    myValueVars.push(parseInt(newItem[1].trim()));
-                } else if (item.match(/^if\s*\(\s*[A-Za-z]+\s*(===|==|!==|!=|<|>|<=|>=)\s*[A-Za-z]+\s*\)\s*{\s*(.*|\s*)*}/g)) {
+                    let newLine = line.match(/[A-Za-z]+\s*=\s*\d+/g)?.toString().split('=');
+
+                    if (newLine) {
+                        myVars.push(newLine[0].trim());
+                        myValueVars.push(parseInt(newLine[1].trim()));
+                    }
+                } else if (line.match(/^if\s*\(\s*[A-Za-z]+\s*(===|==|!==|!=|<|>|<=|>=)\s*[A-Za-z]+\s*\)\s*{\s*(.*|\s*)*}/g)) {
                     answersByCode.value.push('Compila correctamente el if');
 
-                    ifValidation = item.replace(/\s+/g, '').split('(')[1].split(')')[0].split(/(===|==|!==|!=|<|>|<=|>=)/g);
+                    ifValidation = line.replace(/\s+/g, '').split('(')[1].split(')')[0].split(/(===|==|!==|!=|<|>|<=|>=)/g);
                 } else {
                     answersByCode.value.push('No se reconoce esta sintaxis');
 
-                    goSemanticIf.value = false;
+                    goSemanticVar.value = false;
                 }
             });
 
@@ -244,21 +255,21 @@ export default defineComponent({
                     // console.log('El tipo de dato no concuerda');
                     if (answerIndex !== -1) {
                         answersByCode.value[answerIndex] = 'El bloque del if es incorrecto';
+                        goSemanticIf.value = false;
                     }
-                    goSemanticVar.value = false;
                 }
             } else {
                 if (answerIndex !== -1) {
                     answersByCode.value[answerIndex] = 'El bloque del if es incorrecto';
+                    goSemanticIf.value = false;
                 }
-                goSemanticVar.value = false;
             }
         };
 
         // Semantic answer
         const semanticAnswer = () => {
             tokens.value.forEach((line: any) => {
-                line.forEach((word: any) => {
+                line.forEach((word: Lexeme) => {
                     answers.value.push(word.semantico);
                 });
                 answersByLine.value.push(answers.value);
@@ -294,6 +305,8 @@ export default defineComponent({
             answersByCode.value = [];
             answers.value = [];
             answersByLine.value = [];
+            goSemanticVar.value = true;
+            goSemanticIf.value = true;
             getCurrentValue();
 
             if (currentValue.value) {
