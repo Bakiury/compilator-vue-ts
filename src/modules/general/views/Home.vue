@@ -97,7 +97,9 @@ export default defineComponent({
         const checkWordNotFound = (name: string) => {
             let temp;
             // Check if the word is a number
-            if (name.match(/[1-9]+/g)) {
+            console.log(name);
+            if (name.match(/^\d+$/g)) {
+                console.log('uno');
                 temp = {
                     nombre: name,
                     tipo: "numero",
@@ -105,7 +107,8 @@ export default defineComponent({
                     semantico: "Valor"
                 };
                 // Check if the word isn't an empty string and a number
-            } else if (name !== '' && isNaN(parseInt(name))) {
+            } else if ((name !== '' && isNaN(parseInt(name))) || name.match(/([1-9]|\w)+/g)) {
+                console.log('dos');
                 temp = {
                     nombre: name,
                     tipo: "identificador",
@@ -114,6 +117,7 @@ export default defineComponent({
                 };
                 // Check if the word isn't an empty string and if the word is a number
             } else if (name !== '' && !isNaN(parseInt(name))) {
+                console.log('tres');
                 temp = {
                     nombre: name,
                     tipo: "numero",
@@ -188,43 +192,43 @@ export default defineComponent({
             mySplitBlocks.value.forEach((line: string) => {
                 // Validate variables
                 line = line.trim();
-                if (line.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 1
+                if (line.match(/^(const|let|var)\s+[A-Za-z0-9]+\s*=\s*".+"/g)) { // Catch string 1
                     answersByCode.value.push('Compila correctamente la declaración de variable tipo string');
 
-                    let newLine = line.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*".+"/g)?.toString().split('=');
+                    let newLine = line.match(/(const|let|var)\s+[A-Za-z0-9]+\s*=\s*".+"/g)?.toString().split('=');
 
                     if (newLine) {
                         myVars.push(newLine[0].replace(/(var|let|const)/g, '').trim());
                         myValueVars.push(newLine[1].replace(/(var|let|const)/g, '').replace(/"/g, '').trim());
                     }
-                } else if (line.match(/^(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 1
+                } else if (line.match(/^(const|let|var)\s+[A-Za-z0-9]+\s*=\s*\d+/g)) { // Catch integer 1
                     answersByCode.value.push('Compila correctamente la declaración de variable tipo integer');
 
-                    let newLine = line.match(/(const|let|var)\s+[A-Za-z]+\s*=\s*\d+/g)?.toString().split('=');
+                    let newLine = line.match(/(const|let|var)\s+[A-Za-z0-9]+\s*=\s*\d+/g)?.toString().split('=');
 
                     if (newLine) {
                         myVars.push(newLine[0].replace(/(var|let|const)/g, '').trim());
                         myValueVars.push(parseInt(newLine[1].replace(/(var|let|const)/g, '').trim()));
                     }
-                } else if (line.match(/^[A-Za-z]+\s*=\s*".+"/g)) { // Catch string 2
+                } else if (line.match(/^[A-Za-z0-9]+\s*=\s*".+"/g)) { // Catch string 2
                     answersByCode.value.push('Se inicializó correctamente la variable tipo string');
 
-                    let newLine = line.match(/[A-Za-z]+\s*=\s*".+"/g)?.toString().split('=');
+                    let newLine = line.match(/[A-Za-z0-9]+\s*=\s*".+"/g)?.toString().split('=');
 
                     if (newLine) {
                         myVars.push(newLine[0].trim());
                         myValueVars.push(newLine[1].replace(/"/g, '').trim());
                     }
-                } else if (line.match(/^[A-Za-z]+\s*=\s*\d+/g)) { // Catch integer 2
+                } else if (line.match(/^[A-Za-z0-9]+\s*=\s*\d+/g)) { // Catch integer 2
                     answersByCode.value.push('Se inicializó correctamente la variable tipo integer');
 
-                    let newLine = line.match(/[A-Za-z]+\s*=\s*\d+/g)?.toString().split('=');
+                    let newLine = line.match(/[A-Za-z0-9]+\s*=\s*\d+/g)?.toString().split('=');
 
                     if (newLine) {
                         myVars.push(newLine[0].trim());
                         myValueVars.push(parseInt(newLine[1].trim()));
                     }
-                } else if (line.match(/^if\s*\(\s*[A-Za-z]+\s*(===|==|!==|!=|<|>|<=|>=)\s*[A-Za-z]+\s*\)\s*{\s*(.*|\s*)*}/g)) {
+                } else if (line.match(/^if\s*\(\s*[A-Za-z0-9]+\s*(===|==|!==|!=|<|>|<=|>=)\s*[A-Za-z0-9]+\s*\)\s*{\s*(.*|\s*)*}/g)) {
                     answersByCode.value.push('Compila correctamente el if');
 
                     ifValidation = line.replace(/\s+/g, '').split('(')[1].split(')')[0].split(/(===|==|!==|!=|<|>|<=|>=)/g);
