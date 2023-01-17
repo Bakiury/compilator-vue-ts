@@ -285,7 +285,7 @@ export default defineComponent({
                     inIf = true;
                 }
                 if (inIf) {
-                    lines[i] = lines[i].replace(';', '');
+                    lines[i] = lines[i].replaceAll(';', '');
                 }
                 if (lines[i].includes('}')) {
                     inIf = false;
