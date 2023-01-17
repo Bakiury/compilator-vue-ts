@@ -97,9 +97,7 @@ export default defineComponent({
         const checkWordNotFound = (name: string) => {
             let temp;
             // Check if the word is a number
-            console.log(name);
             if (name.match(/^\d+$/g)) {
-                console.log('uno');
                 temp = {
                     nombre: name,
                     tipo: "numero",
@@ -108,7 +106,6 @@ export default defineComponent({
                 };
                 // Check if the word isn't an empty string and a number
             } else if ((name !== '' && isNaN(parseInt(name))) || name.match(/([1-9]|\w)+/g)) {
-                console.log('dos');
                 temp = {
                     nombre: name,
                     tipo: "identificador",
@@ -117,7 +114,6 @@ export default defineComponent({
                 };
                 // Check if the word isn't an empty string and if the word is a number
             } else if (name !== '' && !isNaN(parseInt(name))) {
-                console.log('tres');
                 temp = {
                     nombre: name,
                     tipo: "numero",
@@ -281,6 +277,26 @@ export default defineComponent({
             });
         };
 
+        const removeAndAddSemicolon = () => {
+            const lines = currentValue.value.split('\n');
+            let inIf = false;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('if')) {
+                    inIf = true;
+                }
+                if (inIf) {
+                    lines[i] = lines[i].replace(';', '');
+                }
+                if (lines[i].includes('}')) {
+                    inIf = false;
+                    if (!lines[i].endsWith(';')) {
+                        lines[i] += ';';
+                    }
+                }
+            }
+            txtArea.value = lines.join('\n');
+        }
+
         const reset = () => {
             txtArea.value = ``;
             tokens.value = [];
@@ -311,6 +327,12 @@ export default defineComponent({
             answersByLine.value = [];
             goSemanticVar.value = true;
             goSemanticIf.value = true;
+
+            // Resolve 2 bugs
+            // 1. Semicolon inside the if
+            // 2. Validate in case it doesn't have a semicolon at the end of the if conditional
+            removeAndAddSemicolon();
+
             getCurrentValue();
 
             if (currentValue.value) {
